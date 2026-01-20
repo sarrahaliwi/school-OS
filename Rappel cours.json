@@ -1,0 +1,298 @@
+{
+  "name": "Rappel cours",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "sessions"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -16
+      ],
+      "id": "ca7dd6ff-8478-4dcc-b4f1-e37f8a542a94",
+      "name": "Supabase Trigger",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0NEZ7mKqmKbyhrpc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -352,
+        144
+      ],
+      "id": "7931e732-6e93-4f7e-8f95-7ba1e5c57583",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "sessions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "scheduled"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        144
+      ],
+      "id": "321d2ff8-782a-4977-8dde-c730d1f350b0",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0NEZ7mKqmKbyhrpc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.start_at }}",
+        "format": "yyyy-MM-dd",
+        "outputFieldName": "date_formatee",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        352,
+        144
+      ],
+      "id": "f649b0eb-6549-4e58-990c-ecdec1cb0323",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "07387409-cab4-45a6-b424-739386ab07b9",
+              "leftValue": "={{ $json.start_at.split('T')[0] }}",
+              "rightValue": "={{ $now.plus({days:1}).toFormat('yyyy-mm-dd') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        512,
+        144
+      ],
+      "id": "5e0bfaf4-b58c-49f9-a8b6-af990fcdc14f",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "sendTo": "sarrahaliwi@gmail.com",
+        "subject": "Rappel de cours demain",
+        "message": "=Bonjour, vous avez un cours de {{ $json.subject }} demain a {{ $json.start_at }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        144
+      ],
+      "id": "0b743291-2916-48cb-ba42-308b193b17b6",
+      "name": "Send a message",
+      "webhookId": "6b35fcb2-dd9e-4cf4-a7d1-3221eba42726",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "dUjWlCvqpNEE0kYX",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "sessions",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Supabase Trigger\"].json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "summary",
+              "fieldValue": "={{ $json.messages.values[0].content}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        288,
+        -16
+      ],
+      "id": "cd6b41fd-fce9-4ef0-98da-e569c3e3d809",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0NEZ7mKqmKbyhrpc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "conversation",
+        "messages": {
+          "values": [
+            {
+              "content": "ccccccccc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -32,
+        -16
+      ],
+      "id": "0d5c1f6e-4da5-4f79-8846-06dcb56bacd6",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "keOeqAXHnuzE8yv4",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Supabase Trigger": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "6ee24cf8-cc1e-458d-80c3-cd742c1c5f6d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8641ab6569a16d9851ce6f95a786d77bcc54032e39a57645d6a044c122ea3d39"
+  },
+  "id": "oeGSN3K_iHDNZj9VzXZzR",
+  "tags": []
+}
